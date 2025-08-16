@@ -71,3 +71,21 @@ body {
 .node-whisper--active {
     opacity: 1;
 }
+
+.narrative-panel {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    width: 300px;
+    padding: 1.5rem;
+    background-color: rgba(11, 2, 29, 0.9);
+    border: 1px solid var(--ember-gold);
+    border-radius: 8px;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(255, 199, 95, 0.2);
+}
+
+.narrative-panel h3 {
+    margin-top: 0;
+    color: var(--ember-gold);
+}
