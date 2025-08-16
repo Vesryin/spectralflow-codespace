@@ -18,9 +18,10 @@ Completed:
 
 Remaining: 
 - Rung 3: Personality & UX
-  - "The Living Network" Scene: User interaction and narrative presentation refined.
-  - Fixed a bug in the raycasting logic to ensure correct node selection.
+  - "The Living Network" Scene: Implemented shader-based visual feedback for node interaction.
 - Rung 4: Deployment & Monitoring
+  - Prepared the application for deployment to Vercel and Railway.
+  - Configured the frontend to communicate with a live backend.
 - Rung 5: Growth & Refinement
 
 Known issues: The current context management uses in-memory storage and a JSON file, which is not suitable for production. The next step will be to migrate to Redis and a vector database as outlined in the plan.

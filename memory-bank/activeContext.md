@@ -1,7 +1,7 @@
-Current tasks: "The Living Network" Scene Implementation.
+Current tasks: Deploying the application to Vercel and Railway.
 
-Recent changes: Refined the user interaction in "The Living Network" scene. Implemented a dynamic narrative panel with smooth fade-in/out transitions and a close button. Added node hover effects, including a tooltip displaying the node's title. Enhanced the opening animation with a typewriter effect for the narrative text.
+Recent changes: Configured the frontend to fetch data from a live backend instead of local files. Prepared the project for deployment.
 
-Next steps: Further refinement of the visual feedback on node interaction, potentially exploring more complex shader-based effects for highlighting and selection.
+Next steps: Deploy the backend to Railway, deploy the frontend to Vercel, and update the frontend with the live backend URL.
 
 Learnings & patterns: The service-oriented architecture is proving effective. The `mcp_service` provides a clean abstraction for interacting with different AI models.

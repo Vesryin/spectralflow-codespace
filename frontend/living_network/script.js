@@ -21,6 +21,8 @@ class LivingNetwork {
         this.mouse = new THREE.Vector2();
         this.intersectedIndex = null;
 
+        this.backendUrl = 'https://your-backend-url.up.railway.app'; // <-- REPLACE WITH YOUR RAILWAY URL
+
         this.init();
     }
 
@@ -48,8 +50,8 @@ class LivingNetwork {
     async loadData() {
         try {
             const [narrativeResponse, graphResponse, nodeVertResponse, nodeFragResponse, filamentVertResponse, filamentFragResponse] = await Promise.all([
-                fetch('./assets/data/narrative.json'),
-                fetch('./assets/data/graph.json'),
+                fetch(`${this.backendUrl}/world/narrative`),
+                fetch(`${this.backendUrl}/world/graph`),
                 fetch('./shaders/node.vert'),
                 fetch('./shaders/node.frag'),
                 fetch('./shaders/filament.vert'),
@@ -73,16 +75,21 @@ class LivingNetwork {
         // Create nodes
         const nodeGeometry = new THREE.BufferGeometry();
         const positions = [];
-        this.graphData.nodes.forEach(nodeData => {
+        const indices = [];
+        this.graphData.nodes.forEach((nodeData, i) => {
             positions.push(nodeData.position.x, nodeData.position.y, nodeData.position.z);
+            indices.push(i);
         });
         nodeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        nodeGeometry.setAttribute('a_index', new THREE.Float32BufferAttribute(indices, 1));
 
         const nodeMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 u_time: { value: 0 },
                 u_size: { value: 15.0 * window.devicePixelRatio },
-                u_color: { value: new THREE.Color(0xffc75f) }
+                u_color: { value: new THREE.Color(0xffc75f) },
+                u_hovered: { value: -1.0 },
+                u_selected: { value: -1.0 }
             },
             vertexShader: this.nodeVertexShader,
             fragmentShader: this.nodeFragmentShader,
@@ -208,6 +215,7 @@ class LivingNetwork {
 
     handleClick() {
         if (this.intersectedIndex !== null) {
+            this.nodes.children[0].material.uniforms.u_selected.value = this.intersectedIndex;
             const nodeData = this.graphData.nodes[this.intersectedIndex];
             const narrative = this.narrativeData.stanzas.find(s => s.node_id === nodeData.id);
 
@@ -231,6 +239,7 @@ class LivingNetwork {
             const intersection = intersects[0];
             const index = intersection.index;
             this.intersectedIndex = index;
+            this.nodes.children[0].material.uniforms.u_hovered.value = index;
     
             const nodeData = this.graphData.nodes[index];
             if (nodeData) {
@@ -243,6 +252,7 @@ class LivingNetwork {
             }
         } else {
             this.intersectedIndex = null;
+            this.nodes.children[0].material.uniforms.u_hovered.value = -1.0;
             document.body.style.cursor = 'default';
             const tooltip = document.getElementById('tooltip');
             tooltip.style.opacity = 0;
