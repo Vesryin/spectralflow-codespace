@@ -1,17 +1,10 @@
 {
-  "name": "SpectralFlow AI DevContainer",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "args": {
-      "VARIANT": "3.12-bullseye"
-    }
-  },
+  "name": "SpectralFlow Ultimate AI DevContainer",
+  "build": { "dockerfile": "Dockerfile" },
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash",
-    "python.pythonPath": "/workspaces/.venv/bin/python",
     "python.formatting.provider": "black",
-    "editor.formatOnSave": true,
-    "files.autoSave": "onFocusChange"
+    "editor.formatOnSave": true
   },
   "extensions": [
     "ms-python.python",
@@ -19,16 +12,16 @@
     "GitHub.copilot",
     "esbenp.prettier-vscode",
     "ms-vscode.vscode-typescript-next",
-    "ms-azuretools.vscode-docker"
+    "ms-azuretools.vscode-docker",
+    "charliermarsh.ruff",
+    "eamodio.gitlens",
+    "mhutchie.git-graph"
   ],
-  "features": {
-    "ghcr.io/devcontainers/features/python:1": {},
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "18"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:1": {}
-  },
   "postCreateCommand": "bash /workspaces/.devcontainer/scripts/setup.sh",
+  "postStartCommand": "bash /workspaces/.devcontainer/scripts/start.sh",
   "forwardPorts": [8888, 5000, 7860],
-  "remoteUser": "codespace"
+  "remoteUser": "codespace",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ]
 }
