@@ -18,7 +18,8 @@ Completed:
 
 Remaining: 
 - Rung 3: Personality & UX
-  - "The Living Network" Scene: Refine user interaction and narrative presentation.
+  - "The Living Network" Scene: User interaction and narrative presentation refined.
+  - Fixed a bug in the raycasting logic to ensure correct node selection.
 - Rung 4: Deployment & Monitoring
 - Rung 5: Growth & Refinement
 

@@ -19,7 +19,7 @@ class LivingNetwork {
         this.clock = new THREE.Clock();
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
-        this.intersected = null;
+        this.intersectedIndex = null;
 
         this.init();
     }
@@ -123,25 +123,38 @@ class LivingNetwork {
     }
 
     runAnimationTimeline() {
-        // This will be driven by the timeline from the tech plan
         console.log("Animation timeline started.");
         if (!this.narrativeData) return;
 
         const openingStanzas = this.narrativeData.stanzas.filter(s => s.beat === 'OPENING');
-        let delay = 500;
+        let totalDelay = 500;
 
         openingStanzas.forEach(stanzaData => {
             const stanza = document.createElement('p');
             stanza.className = 'text-layer__stanza';
-            stanza.textContent = stanzaData.text;
             this.textLayer.appendChild(stanza);
-            
-            setTimeout(() => {
-                stanza.style.opacity = 1;
-            }, delay);
 
-            delay += 3000; // Stagger the appearance of each line
+            setTimeout(() => {
+                this.typewriterEffect(stanza, stanzaData.text, 50);
+            }, totalDelay);
+
+            totalDelay += (stanzaData.text.length * 50) + 1000; // Add a pause between stanzas
         });
+    }
+
+    typewriterEffect(element, text, speed) {
+        let i = 0;
+        element.innerHTML = ""; // Clear the element
+        element.style.opacity = 1;
+        
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            }
+        }
+        type();
     }
 
     animate() {
@@ -176,6 +189,16 @@ class LivingNetwork {
         window.addEventListener('resize', this.handleResize.bind(this));
         window.addEventListener('mousemove', this.handleMouseMove.bind(this));
         window.addEventListener('click', this.handleClick.bind(this));
+
+        const closeButton = document.getElementById('close-panel');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                const narrativePanel = document.getElementById('narrative-panel');
+                if (narrativePanel) {
+                    narrativePanel.classList.remove('visible');
+                }
+            });
+        }
     }
 
     handleMouseMove(event) {
@@ -184,19 +207,16 @@ class LivingNetwork {
     }
 
     handleClick() {
-        if (this.intersected) {
-            const nodeId = this.intersected.userData.id;
-            const narrative = this.narrativeData.stanzas.find(s => s.node_id === nodeId);
+        if (this.intersectedIndex !== null) {
+            const nodeData = this.graphData.nodes[this.intersectedIndex];
+            const narrative = this.narrativeData.stanzas.find(s => s.node_id === nodeData.id);
+
             if (narrative) {
                 const narrativePanel = document.getElementById('narrative-panel');
-                if (!narrativePanel) {
-                    const panel = document.createElement('div');
-                    panel.id = 'narrative-panel';
-                    panel.className = 'narrative-panel';
-                    document.body.appendChild(panel);
-                    panel.innerHTML = `<h3>${narrative.title}</h3><p>${narrative.text}</p>`;
-                } else {
-                    narrativePanel.innerHTML = `<h3>${narrative.title}</h3><p>${narrative.text}</p>`;
+                const narrativeContent = document.getElementById('narrative-content');
+                if (narrativePanel && narrativeContent) {
+                    narrativeContent.innerHTML = `<h3>${narrative.title}</h3><p>${narrative.text}</p>`;
+                    narrativePanel.classList.add('visible');
                 }
             }
         }
@@ -204,16 +224,31 @@ class LivingNetwork {
 
     updateRaycaster() {
         this.raycaster.setFromCamera(this.mouse, this.camera);
+        this.raycaster.params.Points.threshold = 0.1;
         const intersects = this.raycaster.intersectObjects(this.nodes.children, true);
-
+    
         if (intersects.length > 0) {
-            // A bit more complex to find the exact point that was intersected
-            // For now, we just detect if we are intersecting the points object
-            document.body.style.cursor = 'pointer';
+            const intersection = intersects[0];
+            const index = intersection.index;
+            this.intersectedIndex = index;
+    
+            const nodeData = this.graphData.nodes[index];
+            if (nodeData) {
+                document.body.style.cursor = 'pointer';
+                const tooltip = document.getElementById('tooltip');
+                tooltip.textContent = nodeData.title;
+                tooltip.style.left = `${(this.mouse.x * 0.5 + 0.5) * window.innerWidth + 15}px`;
+                tooltip.style.top = `${(-this.mouse.y * 0.5 + 0.5) * window.innerHeight + 15}px`;
+                tooltip.style.opacity = 1;
+            }
         } else {
+            this.intersectedIndex = null;
             document.body.style.cursor = 'default';
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.opacity = 0;
         }
     }
+    
 }
 
 document.addEventListener('DOMContentLoaded', () => {
