@@ -4,14 +4,15 @@ Completed:
   - Defined Pydantic models for core data structures.
   - Implemented a service layer to separate business logic from API endpoints.
   - Conceptually defined MCP server schemas.
-- Rung 2: Core Functionalities (In Progress)
+- Rung 2: Core Functionalities (Completed)
   - Implemented initial MCP server integration with simulated model calls and fallback logic.
   - Implemented Phase 1 of persistent context handling with a `ConversationManager`.
+  - Implemented the Basic Voice Pipeline with local STT/TTS models.
 
 Remaining: 
-- Rung 2: Core Functionalities (Continued)
-  - Basic Voice Pipeline
 - Rung 3: Personality & UX
+- Rung 4: Deployment & Monitoring
+- Rung 5: Growth & Refinement
 - Rung 4: Deployment & Monitoring
 - Rung 5: Growth & Refinement
 
