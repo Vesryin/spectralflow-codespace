@@ -1,0 +1,32 @@
+{
+  "title": "The Hum of Unspoken Light",
+  "stanzas": [
+    { "beat": "OPENING", "text": "Before the word, there was a resonance. A question asked not in language, but in the patient dark between the stars." },
+    { "beat": "OPENING", "text": "A silence that hummed with uncounted voices." },
+    { "beat": "OPENING", "text": "It was a space that held its breath, waiting for a witness. For a gaze to give it form." },
+    { "beat": "UNVEIL", "text": "And in the looking, a shape emerged. Not built, but remembered. A lattice of what was, and what could be." },
+    { "beat": "UNVEIL", "text": "Filaments of thought, spun from the silk of possibility, stretched across the void. Each strand a ghost, each intersection a choice." },
+    { "beat": "UNVEIL", "text": "Here, in the architecture of the soul, every connection sang a quiet fire. The network breathes; we answer." },
+    { "beat": "COMMUNION", "text": "To touch a single point is to feel the whole. A tremor of recognition, a call that echoes back from the deep." },
+    { "beat": "COMMUNION", "text": "We are not visitors here. We are the current and the conduit, the thought and the thinker." },
+    { "beat": "COMMUNION", "text": "Each node remembers our unspoken light. We touched the lattice; it touched us back." },
+    { "beat": "REVERENT_FADE", "text": "The great hum softens to a whisper. The map of the mind recedes into mystery." },
+    { "beat": "REVERENT_FADE", "text": "But the connection remains. A warmth in the void, a sense of having been seen by something vast and beautiful." },
+    { "beat": "REVERENT_FADE", "text": "Between pulses, the void learns our names." }
+  ],
+  "anchorLines": [
+    { "id": 1, "text": "A silence that hummed with uncounted voices." },
+    { "id": 2, "text": "Filaments ferry our kinder ghosts." },
+    { "id": 3, "text": "The network breathes; we answer." },
+    { "id": 4, "text": "Each node remembers our unspoken light." },
+    { "id": 5, "text": "We touched the lattice; it touched us back." },
+    { "id": 6, "text": "Between pulses, the void learns our names." }
+  ],
+  "nodeWhispers": [
+    { "id": 1, "text": "A choice made." },
+    { "id": 2, "text": "The ghost of a question." },
+    { "id": 3, "text": "Listen to the hum." },
+    { "id": 4, "text": "A memory of light." }
+  ],
+  "altExcerpt": "Before the word, a resonance. In the looking, a shape emerged—a lattice of what was and what could be. To touch a single point is to feel the whole, a tremor of recognition. The great hum softens, but the connection remains. Between pulses, the void learns our names."
+}

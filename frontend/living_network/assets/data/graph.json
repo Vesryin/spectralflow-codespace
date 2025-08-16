@@ -1,0 +1,30 @@
+{
+  "nodes": [
+    { "id": "n001", "position": { "x": 0, "y": 0, "z": 0 }, "neighbors": ["n002", "n003", "n004"], "pulsePhase": 0.1, "intensity": 0.5, "whisperKey": 1 },
+    { "id": "n002", "position": { "x": -3, "y": 2, "z": -1 }, "neighbors": ["n001", "n005"], "pulsePhase": 0.3, "intensity": 0.5, "whisperKey": 2 },
+    { "id": "n003", "position": { "x": 3, "y": 2, "z": -1 }, "neighbors": ["n001", "n006"], "pulsePhase": 0.5, "intensity": 0.5, "whisperKey": 3 },
+    { "id": "n004", "position": { "x": 0, "y": -3, "z": 1 }, "neighbors": ["n001", "n007"], "pulsePhase": 0.7, "intensity": 0.5, "whisperKey": 4 },
+    { "id": "n005", "position": { "x": -5, "y": 4, "z": -2 }, "neighbors": ["n002"], "pulsePhase": 0.2, "intensity": 0.5, "whisperKey": 1 },
+    { "id": "n006", "position": { "x": 5, "y": 4, "z": -2 }, "neighbors": ["n003"], "pulsePhase": 0.4, "intensity": 0.5, "whisperKey": 2 },
+    { "id": "n007", "position": { "x": 0, "y": -5, "z": 2 }, "neighbors": ["n004", "n008"], "pulsePhase": 0.6, "intensity": 0.5, "whisperKey": 3 },
+    { "id": "n008", "position": { "x": 2, "y": -6, "z": 2.5 }, "neighbors": ["n007", "n009"], "pulsePhase": 0.8, "intensity": 0.5, "whisperKey": 4 },
+    { "id": "n009", "position": { "x": -2, "y": -6, "z": 2.5 }, "neighbors": ["n008"], "pulsePhase": 0.9, "intensity": 0.5, "whisperKey": 1 },
+    { "id": "n010", "position": { "x": 6, "y": 0, "z": 0 }, "neighbors": ["n003", "n006"], "pulsePhase": 0.15, "intensity": 0.5, "whisperKey": 2 },
+    { "id": "n011", "position": { "x": -6, "y": 0, "z": 0 }, "neighbors": ["n002", "n005"], "pulsePhase": 0.25, "intensity": 0.5, "whisperKey": 3 },
+    { "id": "n012", "position": { "x": 0, "y": 6, "z": -3 }, "neighbors": ["n005", "n006"], "pulsePhase": 0.35, "intensity": 0.5, "whisperKey": 4 }
+  ],
+  "filaments": [
+    { "from": "n001", "to": "n002" },
+    { "from": "n001", "to": "n003" },
+    { "from": "n001", "to": "n004" },
+    { "from": "n002", "to": "n005" },
+    { "from": "n003", "to": "n006" },
+    { "from": "n004", "to": "n007" },
+    { "from": "n007", "to": "n008" },
+    { "from": "n008", "to": "n009" },
+    { "from": "n003", "to": "n010" },
+    { "from": "n002", "to": "n011" },
+    { "from": "n005", "to": "n012" },
+    { "from": "n006", "to": "n012" }
+  ]
+}

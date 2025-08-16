@@ -13,3 +13,9 @@ class Location(BaseModel):
     name: str
     description: str
     characters: List[int] = []
+
+class WorldState(BaseModel):
+    status: str
+
+class WorldTime(BaseModel):
+    time: str

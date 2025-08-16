@@ -8,3 +8,14 @@ class Character(BaseModel):
     location_id: int
     emotional_state: str
     goals: List[str] = []
+
+class Quest(BaseModel):
+    id: int
+    name: str
+    description: str
+    status: str
+
+class Memory(BaseModel):
+    id: int
+    title: str
+    summary: str

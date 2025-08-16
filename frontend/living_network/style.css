@@ -1,0 +1,73 @@
+:root {
+    --ember-gold: #FFC75F;
+    --luminescent-white: #F0F8FF;
+    --deep-indigo: #1A0A4F;
+    --void-black: #0B021D;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: var(--void-black);
+    font-family: 'Merriweather', serif;
+    color: var(--luminescent-white);
+}
+
+#scene-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+#webgl-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.text-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* Allow clicks to pass through to the canvas */
+    text-align: center;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.text-layer__stanza {
+    max-width: 600px;
+    font-size: 1.5rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+.node-whisper {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(11, 2, 29, 0.8);
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+    pointer-events: all; /* Whispers can be interacted with if needed */
+    transform: translate(-50%, -150%); /* Position above the node */
+}
+
+.node-whisper--active {
+    opacity: 1;
+}

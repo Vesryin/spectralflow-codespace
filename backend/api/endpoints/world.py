@@ -1,13 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from backend.models.world import WorldState, WorldTime
+from backend.services import world_service
 
 router = APIRouter()
 
-@router.get("/state")
+@router.get("/state", response_model=WorldState)
 async def get_world_state():
-    # Logic to retrieve world state will go here
-    return {"status": "World is stable."}
+    return world_service.get_state()
 
-@router.get("/time")
+@router.get("/time", response_model=WorldTime)
 async def get_world_time():
-    # Logic to retrieve world time will go here
-    return {"time": "Twilight"}
+    return world_service.get_time()
