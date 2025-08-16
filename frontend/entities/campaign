@@ -1,0 +1,59 @@
+{
+  "name": "Campaign",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Campaign name"
+    },
+    "current_chapter": {
+      "type": "string",
+      "description": "Current story chapter"
+    },
+    "party_members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of character IDs in the party"
+    },
+    "current_location": {
+      "type": "string",
+      "description": "Where the party currently is"
+    },
+    "world_state": {
+      "type": "object",
+      "description": "Current state of the world, NPCs, etc."
+    },
+    "difficulty_modifier": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 3,
+      "default": 2,
+      "description": "Dark Souls difficulty multiplier"
+    },
+    "total_deaths": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0,
+      "description": "Total party deaths this campaign"
+    },
+    "chapters_completed": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of completed story chapters"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this campaign is currently active"
+    }
+  },
+  "required": [
+    "title",
+    "current_chapter",
+    "party_members",
+    "current_location"
+  ]
+}

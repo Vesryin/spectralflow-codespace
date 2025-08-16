@@ -1,0 +1,56 @@
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Brain, Zap, Heart, Lightbulb } from "lucide-react";
+
+export default function LearningIndicator({ recentLessons, learningCharacter }) {
+  if (!recentLessons || recentLessons.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-green-900/20 border-t border-green-700/30 p-4"
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center">
+          <Brain className="w-4 h-4 text-white animate-pulse" />
+        </div>
+        <div>
+          <h4 className="text-green-300 font-medium">Learning AI Progress</h4>
+          <p className="text-green-200 text-sm">
+            {learningCharacter?.name || 'Learning Spectra'} • {learningCharacter?.learning_memories?.length || 0} lessons learned
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <AnimatePresence>
+          {recentLessons.map((lesson, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ delay: index * 0.1 }}
+              className="flex items-start gap-2 text-sm"
+            >
+              <Lightbulb className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
+              <span className="text-green-100 italic">"{lesson}"</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between text-xs text-green-300">
+        <span className="flex items-center gap-1">
+          <Zap className="w-3 h-3" />
+          Neural adaptation in progress
+        </span>
+        <span className="flex items-center gap-1">
+          <Heart className="w-3 h-3" />
+          Survival instinct strengthening
+        </span>
+      </div>
+    </motion.div>
+  );
+}

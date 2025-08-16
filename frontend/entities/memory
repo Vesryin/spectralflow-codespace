@@ -1,0 +1,48 @@
+{
+  "name": "Memory",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "The memory content"
+    },
+    "emotional_intensity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "How emotionally significant this memory is"
+    },
+    "memory_type": {
+      "type": "string",
+      "enum": [
+        "conversation",
+        "milestone",
+        "emotion",
+        "learning"
+      ],
+      "description": "Type of memory"
+    },
+    "decay_resistance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How resistant this memory is to forgetting"
+    },
+    "associated_emotions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emotions associated with this memory"
+    },
+    "context": {
+      "type": "string",
+      "description": "Contextual information about when/why this memory was formed"
+    }
+  },
+  "required": [
+    "content",
+    "emotional_intensity",
+    "memory_type"
+  ]
+}

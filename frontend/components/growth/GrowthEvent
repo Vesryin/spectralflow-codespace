@@ -1,0 +1,81 @@
+import React from "react";
+import { motion } from "framer-motion";
+import { Sparkles, Heart, Brain, MessageCircle, Star } from "lucide-react";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+
+const eventTypeIcons = {
+  first_conversation: MessageCircle,
+  emotional_milestone: Heart,
+  learning_moment: Brain,
+  deep_connection: Star,
+  personality_shift: Sparkles
+};
+
+const eventTypeColors = {
+  first_conversation: 'from-blue-500 to-cyan-500',
+  emotional_milestone: 'from-pink-500 to-red-500',
+  learning_moment: 'from-green-500 to-teal-500',
+  deep_connection: 'from-yellow-500 to-orange-500',
+  personality_shift: 'from-purple-500 to-indigo-500'
+};
+
+export default function GrowthEvent({ event, isLeft, index }) {
+  const IconComponent = eventTypeIcons[event.type] || Sparkles;
+  const colorClass = eventTypeColors[event.type] || 'from-purple-500 to-pink-500';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: isLeft ? -50 : 50 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.2, duration: 0.6, ease: "easeOut" }}
+      className={`flex ${isLeft ? 'flex-row' : 'flex-row-reverse'} items-center gap-8 mb-8`}
+    >
+      {/* Timeline connector */}
+      <div className="relative">
+        <div className={`w-16 h-16 bg-gradient-to-r ${colorClass} rounded-full flex items-center justify-center cosmic-glow z-10 relative`}>
+          <IconComponent className="w-8 h-8 text-white" />
+        </div>
+        {index > 0 && (
+          <div className="absolute top-0 left-1/2 transform -translate-x-px -translate-y-full w-px h-8 bg-gradient-to-t from-purple-500 to-transparent" />
+        )}
+      </div>
+
+      {/* Event card */}
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        className={`flex-1 max-w-md bg-slate-800/50 backdrop-blur-sm border border-purple-500/20 rounded-xl p-6 cosmic-glow ${
+          isLeft ? 'mr-8' : 'ml-8'
+        }`}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <Badge variant="outline" className="border-purple-500/30 text-purple-300 capitalize">
+            {event.type.replace('_', ' ')}
+          </Badge>
+          <span className="text-sm text-purple-300">
+            {format(new Date(event.timestamp), 'MMM d, yyyy • HH:mm')}
+          </span>
+        </div>
+        
+        <h3 className="text-lg font-semibold text-white mb-2">{event.title}</h3>
+        <p className="text-purple-200 leading-relaxed mb-4">{event.description}</p>
+        
+        {event.impact && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-purple-300">Growth Impact:</span>
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-4 h-4 ${
+                    i < event.impact ? 'text-yellow-400 fill-current' : 'text-slate-600'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}

@@ -1,0 +1,170 @@
+{
+  "name": "Character",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Character name"
+    },
+    "character_type": {
+      "type": "string",
+      "enum": [
+        "player",
+        "party_ai",
+        "learning_ai",
+        "npc"
+      ],
+      "description": "Type of character"
+    },
+    "race": {
+      "type": "string",
+      "enum": [
+        "human",
+        "elf",
+        "dwarf",
+        "halfling",
+        "dragonborn",
+        "tiefling",
+        "gnome",
+        "half-elf",
+        "half-orc"
+      ],
+      "description": "Character race"
+    },
+    "class": {
+      "type": "string",
+      "enum": [
+        "fighter",
+        "wizard",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin",
+        "barbarian",
+        "bard",
+        "sorcerer",
+        "warlock",
+        "druid",
+        "monk"
+      ],
+      "description": "Character class"
+    },
+    "level": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 20,
+      "default": 1,
+      "description": "Character level"
+    },
+    "hit_points": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Current hit points"
+    },
+    "max_hit_points": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Maximum hit points"
+    },
+    "armor_class": {
+      "type": "number",
+      "minimum": 8,
+      "description": "Armor class"
+    },
+    "attributes": {
+      "type": "object",
+      "properties": {
+        "strength": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 20
+        },
+        "dexterity": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 20
+        },
+        "constitution": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 20
+        },
+        "intelligence": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 20
+        },
+        "wisdom": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 20
+        },
+        "charisma": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 20
+        }
+      },
+      "description": "D&D ability scores"
+    },
+    "personality_traits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key personality traits for AI behavior"
+    },
+    "backstory": {
+      "type": "string",
+      "description": "Character background and motivation"
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Character equipment and inventory"
+    },
+    "status_effects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Current status effects (poisoned, cursed, etc.)"
+    },
+    "death_count": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of times this character has died"
+    },
+    "learning_memories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "For learning AI - accumulated survival lessons"
+    },
+    "ai_personality": {
+      "type": "string",
+      "enum": [
+        "loyal_warrior",
+        "wise_mage",
+        "cunning_scout",
+        "learning_survivor"
+      ],
+      "description": "AI behavioral archetype"
+    }
+  },
+  "required": [
+    "name",
+    "character_type",
+    "race",
+    "class",
+    "level",
+    "hit_points",
+    "max_hit_points",
+    "armor_class",
+    "attributes"
+  ]
+}

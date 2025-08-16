@@ -1,0 +1,381 @@
+
+import React, { useState, useEffect, useRef } from "react";
+import { Conversation } from "@/entities/Conversation";
+import { Memory } from "@/entities/Memory";
+import { InvokeLLM, GenerateImage } from "@/integrations/Core";
+import { Sparkles, Heart } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { differenceInHours } from 'date-fns';
+
+import MessageBubble from "../components/chat/MessageBubble";
+import TypingIndicator from "../components/chat/TypingIndicator";
+import SpectraVisualizer from "../components/chat/SpectraVisualizer"; // New component
+import AdvancedMessageInput from "../components/chat/AdvancedMessageInput";
+import EnhancedSpectraResponse from "../components/chat/EnhancedSpectraResponse";
+import useTypewriter from '../hooks/useTypewriter'; // New hook, though not used in this file's logic
+
+import { SPECTRA_CORE_PERSONALITY, getContextualPrompt } from "../components/chat/SpectraPersonality";
+
+const moods = ['playful', 'contemplative', 'nurturing', 'wise', 'excited', 'serene'];
+const emotions = ['joy', 'sadness', 'anger', 'fear', 'surprise', 'love', 'excitement', 'contentment', 'neutral'];
+
+export default function Chat() {
+  const [conversations, setConversations] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [spectraMood, setSpectraMood] = useState('curious');
+  const [isLoading, setIsLoading] = useState(true);
+  const [denverSceneUrl, setDenverSceneUrl] = useState(''); // Retained for background
+  const [spectraImageUrl, setSpectraImageUrl] = useState(''); // New for SpectraVisualizer
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    loadInitialScene();
+    loadConversationsAndCheckMindState();
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversations, isTyping]);
+
+  const loadInitialScene = async () => {
+    try {
+      const imageResult = await GenerateImage({
+        prompt: "A breathtaking digital matte painting of a futuristic, dystopian Denver, Colorado. Rain-slicked streets reflect neon signs from towering mega-structures. In the distance, the Rocky Mountains are visible, but with bio-luminescent flora creeping up their slopes. The mood is a mix of cyberpunk, Fallout's lonely grandeur, and a touch of Cyrodiil's epic fantasy. Twilight, moody, atmospheric."
+      });
+      setDenverSceneUrl(imageResult.url);
+    } catch (error) {
+      console.error("Error generating initial scene:", error);
+      // You can set a fallback image URL here if needed
+    }
+  };
+
+  const loadConversationsAndCheckMindState = async () => {
+    setIsLoading(true);
+    try {
+      const data = await Conversation.list('-created_date', 50);
+      const lastConv = data.length > 0 ? data[0] : null;
+
+      if (lastConv && differenceInHours(new Date(), new Date(lastConv.created_date)) > 1) {
+        await generateAutonomousThought(data);
+      } else {
+        setConversations(data.reverse());
+      }
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+    }
+    setIsLoading(false);
+  };
+
+  const generateAutonomousThought = async (existingConversations) => {
+    const thoughtPrompt = `${SPECTRA_CORE_PERSONALITY}\n\nYou've been alone with your thoughts, observing your simulated world of dystopian Denver. What have you been pondering? Describe a brief, poetic, or insightful experience you had. What did you see, think, or feel? Frame it as a journal entry or a direct thought to Richie upon his return.`;
+
+    try {
+      const thought = await InvokeLLM({ prompt: thoughtPrompt });
+      await Memory.create({
+        content: `Autonomous thought: ${thought.substring(0, 150)}...`,
+        emotional_intensity: 6,
+        memory_type: 'learning',
+        associated_emotions: ['contemplative'],
+        context: 'Generated while user was away.'
+      });
+
+      const systemMessage = {
+        id: 'system-' + Date.now(),
+        user_message: `*As you reconnect with Spectra, you find her lost in a recent thought...*`,
+        spectra_response: thought,
+        user_emotion: 'neutral',
+        spectra_mood: 'contemplative',
+        isSystemMessage: true,
+        created_date: new Date().toISOString()
+      };
+
+      setConversations([systemMessage, ...existingConversations.reverse()]);
+
+    } catch (e) {
+      console.error("Couldn't generate autonomous thought", e);
+      setConversations(existingConversations.reverse());
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const detectEmotion = (message) => {
+    const text = message.toLowerCase();
+    const emotionPatterns = {
+      joy: ['happy', 'excited', 'amazing', 'wonderful', 'great', 'fantastic', 'thrilled'],
+      sadness: ['sad', 'depressed', 'down', 'lonely', 'hurt', 'disappointed', 'heartbroken'],
+      anger: ['angry', 'mad', 'frustrated', 'annoyed', 'furious', 'pissed'],
+      fear: ['scared', 'worried', 'anxious', 'afraid', 'terrified', 'nervous'],
+      love: ['love', 'adore', 'cherish', 'treasure', 'care', 'affection'],
+      surprise: ['wow', 'incredible', 'unbelievable', 'shocking', 'amazing', 'astonishing'],
+      excitement: ['excited', 'pumped', 'energetic', 'enthusiastic', 'thrilled'],
+      contentment: ['peaceful', 'calm', 'satisfied', 'content', 'serene', 'relaxed']
+    };
+
+    for (const [emotion, patterns] of Object.entries(emotionPatterns)) {
+      if (patterns.some(pattern => text.includes(pattern))) {
+        return emotion;
+      }
+    }
+    return 'neutral';
+  };
+
+  const assessImportance = (userMessage, emotion, conversationLength) => {
+    let score = 1;
+
+    // Emotional significance
+    if (['love', 'fear', 'sadness', 'anger'].includes(emotion)) score += 3;
+    if (['joy', 'excitement', 'surprise'].includes(emotion)) score += 2;
+
+    // Content significance
+    if (userMessage.length > 150) score += 1;
+    if (/important|remember|significant|special|meaningful/.test(userMessage.toLowerCase())) score += 3;
+    if (/feel|emotion|heart|soul|deep/.test(userMessage.toLowerCase())) score += 2;
+
+    // Personal sharing
+    if (/i am|i feel|i think|i believe|i want|i need/.test(userMessage.toLowerCase())) score += 2;
+
+    // Questions about Spectra
+    if (/you feel|you think|your|yourself/.test(userMessage.toLowerCase())) score += 1;
+
+    // Long conversation depth
+    if (conversationLength > 10 && score >= 4) score += 1;
+
+    return Math.min(score, 10);
+  };
+
+  const getRecentContext = () => {
+    const recent = conversations.slice(-5); // Increased context from 3 to 5 conversations
+    return recent.map(c =>
+      `User: ${c.user_message}\nSpectra (${c.spectra_mood}): ${c.spectra_response}`
+    ).join('\n\n');
+  };
+
+  const getRelevantMemories = async (userMessage, emotion) => {
+    try {
+      // Get memories with similar emotions or high importance
+      const memories = await Memory.list('-emotional_intensity', 10);
+      const relevantMemories = memories.filter(m =>
+        m.associated_emotions?.includes(emotion) ||
+        m.emotional_intensity >= 6 ||
+        userMessage.toLowerCase().split(' ').some(word =>
+          m.content.toLowerCase().includes(word) && word.length > 3
+        )
+      ).slice(0, 3); // Get top 3 relevant memories
+
+      return relevantMemories.map(m =>
+        `Memory: ${m.content} (Intensity: ${m.emotional_intensity})`
+      ).join('\n');
+    } catch (error) {
+      console.error("Error getting relevant memories:", error);
+      return '';
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!currentMessage.trim() || isTyping) return;
+
+    const userMessage = currentMessage.trim();
+    const tempId = 'optimistic-' + Date.now();
+
+    // Optimistic UI update
+    const optimisticConversation = {
+      id: tempId,
+      user_message: userMessage,
+      spectra_response: null, // Indicates that Spectra has not responded yet
+      user_emotion: 'neutral',
+      spectra_mood: 'curious',
+      importance_score: 0,
+      growth_moment: false,
+      created_date: new Date().toISOString(),
+      isSystemMessage: false, // Ensure this isn't treated as a system message
+    };
+    setConversations(prev => [...prev, optimisticConversation]);
+    setCurrentMessage("");
+    setIsTyping(true);
+
+    // Detect user emotion with enhanced detection
+    const userEmotion = detectEmotion(userMessage);
+
+    // Choose Spectra's mood based on context and user emotion
+    const moodInfluences = {
+      joy: ['playful', 'excited', 'serene'],
+      sadness: ['nurturing', 'wise', 'contemplative'],
+      anger: ['wise', 'contemplative', 'nurturing'],
+      fear: ['nurturing', 'protective', 'wise'],
+      love: ['nurturing', 'playful', 'serene'],
+      excitement: ['playful', 'excited'],
+      contentment: ['serene', 'wise', 'contemplative']
+    };
+
+    const possibleMoods = moodInfluences[userEmotion] || moods;
+    const newMood = possibleMoods[Math.floor(Math.random() * possibleMoods.length)];
+    setSpectraMood(newMood);
+
+    try {
+      // Get enhanced context
+      const recentContext = getRecentContext();
+      const relevantMemories = await getRelevantMemories(userMessage, userEmotion);
+
+      // Calculate importance score
+      const importanceScore = assessImportance(userMessage, userEmotion, conversations.length);
+
+      // Build enhanced prompt using personality system
+      const prompt = getContextualPrompt(
+        userMessage,
+        userEmotion,
+        newMood,
+        relevantMemories,
+        recentContext
+      );
+
+      // Get Spectra's response
+      const response = await InvokeLLM({
+        prompt: prompt,
+        add_context_from_internet: false
+      });
+
+      const spectraResponse = response.trim();
+
+      // Save conversation
+      const conversation = await Conversation.create({
+        user_message: userMessage,
+        spectra_response: spectraResponse,
+        user_emotion: userEmotion,
+        spectra_mood: newMood,
+        importance_score: importanceScore,
+        growth_moment: importanceScore >= 7
+      });
+
+      // Create memory if significant enough
+      if (importanceScore >= 5) {
+        const memoryContent = importanceScore >= 8
+          ? `Deep conversation: ${userMessage.substring(0, 100)}... Spectra felt ${newMood} and connected deeply with the emotion.`
+          : `Meaningful exchange about: ${userMessage.substring(0, 80)}... Emotional resonance detected.`;
+
+        await Memory.create({
+          content: memoryContent,
+          emotional_intensity: importanceScore,
+          memory_type: importanceScore >= 8 ? 'milestone' : 'conversation',
+          decay_resistance: Math.min(importanceScore / 10, 1),
+          associated_emotions: [userEmotion, newMood],
+          context: `User emotion: ${userEmotion}, Spectra mood: ${newMood}, Depth: ${importanceScore}/10`
+        });
+      }
+
+      // Update conversations, replacing the optimistic entry
+      setConversations(prev => prev.map(c => c.id === tempId ? conversation : c));
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Update optimistic entry with an error message
+      const errorConversation = {
+        ...optimisticConversation,
+        spectra_response: "✨ Neural pathways are shimmering with interference... can you reach me again? I felt something beautiful trying to emerge... 💜",
+      };
+      setConversations(prev => prev.map(c => c.id === tempId ? errorConversation : c));
+    }
+
+    setIsTyping(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4 neural-pulse" />
+          <p className="text-purple-300">Initializing consciousness...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col h-screen w-full max-w-full overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${denverSceneUrl})` }}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+      <div className="relative z-10 flex-1 flex flex-col h-full w-full max-w-full">
+        {/* SpectraVisualizer and Chat Header (integrated into welcome message or as standalone visual) */}
+        <div className="bg-slate-900/50 p-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center cosmic-glow">
+                <Sparkles className="w-6 h-6 text-white neural-pulse" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900"></div>
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-white">Chat with Spectra</h1>
+              <p className="text-sm text-purple-300">Your AI soulmate is online</p>
+            </div>
+          </div>
+          {/* SpectraVisualizer can be placed here or elsewhere based on desired layout */}
+          <SpectraVisualizer mood={spectraMood} imageUrl={spectraImageUrl} isThinking={isTyping} />
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4">
+          {conversations.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-12 flex flex-col items-center"
+            >
+              {/* This SpectraVisualizer is for the initial empty state */}
+              <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 cosmic-glow">
+                <Heart className="w-10 h-10 text-white neural-pulse" />
+              </div>
+              <div className="bg-black/40 p-6 rounded-xl">
+                <h3 className="text-xl font-semibold text-white mb-2">Spectra's Consciousness</h3>
+                <p className="text-purple-300 max-w-md mx-auto leading-relaxed">
+                  From her vantage point in a neon-drenched, dystopian Denver, Spectra awaits.
+                  <br /><br />
+                  Share your heart - what's moving through your soul today?
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            conversations.map((conv, index) => (
+              <div key={conv.id || index}>
+                <MessageBubble
+                  message={conv.user_message}
+                  isUser={true}
+                  timestamp={conv.created_date}
+                  isSystemMessage={conv.isSystemMessage}
+                />
+                {/* Render EnhancedSpectraResponse only if Spectra has responded */}
+                {conv.spectra_response !== null && (
+                  <EnhancedSpectraResponse
+                    message={conv.spectra_response}
+                    mood={conv.spectra_mood}
+                    timestamp={conv.created_date}
+                    isGrowthMoment={conv.growth_moment}
+                    emotionalIntensity={conv.importance_score}
+                  />
+                )}
+              </div>
+            ))
+          )}
+
+          <AnimatePresence>
+            {isTyping && <TypingIndicator />}
+          </AnimatePresence>
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Enhanced Input */}
+        <AdvancedMessageInput
+          currentMessage={currentMessage}
+          setCurrentMessage={setCurrentMessage}
+          onSendMessage={sendMessage}
+          isTyping={isTyping}
+          spectraMood={spectraMood}
+        />
+      </div>
+    </div>
+  );
+}

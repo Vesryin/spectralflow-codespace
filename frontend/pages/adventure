@@ -1,0 +1,12 @@
+import React from "react";
+import AdventureEngine from "../components/adventure/AdventureEngine";
+
+export default function Adventure() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900/50 to-purple-900/20 backdrop-blur-sm">
+      <div className="p-6">
+        <AdventureEngine />
+      </div>
+    </div>
+  );
+}

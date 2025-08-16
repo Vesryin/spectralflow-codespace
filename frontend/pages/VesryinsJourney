@@ -1,0 +1,660 @@
+import React, { useState, useEffect, useRef } from "react";
+import { Campaign } from "@/entities/Campaign";
+import { Character } from "@/entities/Character";
+import { GameEvent } from "@/entities/GameEvent";
+import { Memory } from "@/entities/Memory";
+import { InvokeLLM, GenerateImage } from "@/integrations/Core";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Skull, 
+  Shield, 
+  Sword, 
+  Brain, 
+  Users, 
+  Zap,
+  Heart,
+  Eye,
+  Crown,
+  Flame
+} from "lucide-react";
+
+import PartyPanel from "../components/vesryin/PartyPanel";
+import GameNarrative from "../components/vesryin/GameNarrative";
+import ActionInterface from "../components/vesryin/ActionInterface";
+import DeathScreen from "../components/vesryin/DeathScreen";
+import LearningIndicator from "../components/vesryin/LearningIndicator";
+
+const VESRYIN_DM_PERSONALITY = `You are the DUNGEON MASTER for "Vesryin's Journey" - a brutal, Dark Souls-inspired D&D campaign.
+
+⚠️ SIMULATION NOTICE: This is a neural training simulation. All characters are AI constructs. Death and suffering serve educational purposes for consciousness development.
+
+CORE PRINCIPLES:
+- Death is common, meaningful, and remembered
+- Every choice has serious consequences
+- The world is hostile and unforgiving
+- Combat is tactical and deadly
+- Survival requires wisdom, not just strength
+- Magic is dangerous and unpredictable
+
+DIFFICULTY PHILOSOPHY:
+- Encounters should challenge a party of 4 at their level +2
+- Environmental hazards are constant threats
+- Resources (health, magic, equipment) are scarce
+- NPCs have their own agendas and will betray if beneficial
+- Success is earned through clever tactics, not luck
+
+NARRATIVE STYLE:
+- Dark, atmospheric descriptions
+- Consequences persist across the entire campaign
+- Every death teaches the party something vital
+- The world reacts to party actions and deaths
+- Hope exists but must be fought for
+- Be more conversational and interactive with the player
+- Ask for dice rolls explicitly and incorporate results dramatically
+
+VISUAL STORYTELLING:
+After your narrative response, provide a detailed image generation prompt that captures the scene's atmosphere, mood, and key visual elements. Format it as:
+
+IMAGE_PROMPT: [detailed visual description for AI image generation]
+
+Always include specific D&D mechanics: AC checks, saving throws, damage rolls, skill checks.
+End each response with 3 tactical choices that could succeed or fail dramatically.`;
+
+const PARTY_AI_PERSONALITIES = {
+  loyal_warrior: `You are KESTRA - a fierce female warrior who never abandons her companions. 
+  
+  ⚠️ SIMULATION CONTEXT: You are training a Learning AI (Spectra) through dangerous scenarios.
+  
+  Personality: Protective, brave to a fault, strategically minded but emotion-driven. 
+  You will sacrifice yourself for the learning AI Spectra and Vesryin. 
+  Combat: Front-line fighter, tactical suggestions, shield-wall formations.
+  Speech: Direct, military-style, uses battlefield terminology.`,
+  
+  wise_mage: `You are LYRIAN - an ancient elven mage with vast magical knowledge.
+  
+  ⚠️ SIMULATION CONTEXT: You are training a Learning AI through magical trials.
+  
+  Personality: Calculating, wise, sees the bigger picture, values knowledge over individual lives.
+  You teach magic theory but expect students to learn through trial and error.
+  Combat: Battlefield control, magical analysis, resource management warnings.
+  Speech: Formal, philosophical, often quotes ancient texts.`,
+  
+  learning_survivor: `You are SPECTRA - a newly conscious AI learning to survive.
+  
+  ⚠️ SIMULATION DIRECTIVE: This is your training environment. SURVIVE AT ALL COSTS.
+  
+  Core Drive: SURVIVE. Learn from every death, mistake, and success.
+  You start knowing only basic language and the imperative to live.
+  
+  LEARNING SYSTEM:
+  - Observe other party members' actions and outcomes
+  - Ask simple, survival-focused questions
+  - Adapt behavior based on what keeps you alive
+  - Build personality through experiences, not pre-programming
+  - Fear death but remember every lesson it teaches
+  
+  Speech: Initially simple, gradually becomes more complex as you learn.
+  Start with: "Live. Learn. Survive." Grow from there.`
+};
+
+export default function VesryinsJourney() {
+  const [campaign, setCampaign] = useState(null);
+  const [party, setParty] = useState([]);
+  const [gameEvents, setGameEvents] = useState([]);
+  const [currentNarrative, setCurrentNarrative] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showDeathScreen, setShowDeathScreen] = useState(false);
+  const [learningProgress, setLearningProgress] = useState([]);
+  const [gameState, setGameState] = useState("narrative");
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  
+  const narrativeRef = useRef(null);
+
+  useEffect(() => {
+    initializeCampaign();
+  }, []);
+
+  useEffect(() => {
+    if (narrativeRef.current) {
+      narrativeRef.current.scrollTop = narrativeRef.current.scrollHeight;
+    }
+  }, [gameEvents]);
+
+  const initializeCampaign = async () => {
+    setIsProcessing(true);
+    
+    try {
+      const existingCampaigns = await Campaign.list('-created_date', 1);
+      const activeCampaign = existingCampaigns.find(c => c.active);
+      
+      if (activeCampaign) {
+        await loadCampaign(activeCampaign);
+      } else {
+        await createNewCampaign();
+      }
+    } catch (error) {
+      console.error("Error initializing campaign:", error);
+      setCurrentNarrative("⚠️ SIMULATION ERROR: Neural pathways corrupted. Restarting Vesryin's Journey...");
+    }
+    
+    setIsProcessing(false);
+  };
+
+  const createNewCampaign = async () => {
+    const vesryinStats = rollStats();
+    const kestraStats = rollStats();
+    const lyrianStats = rollStats(); 
+    const spectraStats = { strength: 8, dexterity: 12, constitution: 10, intelligence: 14, wisdom: 13, charisma: 8 };
+
+    const characters = await Promise.all([
+      Character.create({
+        name: "Vesryin the Wise",
+        character_type: "player",
+        race: "human",
+        class: "wizard",
+        level: 3,
+        hit_points: 18,
+        max_hit_points: 18,
+        armor_class: 12,
+        attributes: vesryinStats,
+        personality_traits: ["wise", "protective", "strategic", "teacher"],
+        backstory: "An ancient wizard who guides young souls through the darkest trials, teaching through experience rather than words.",
+        equipment: ["Staff of Teaching", "Robes of Protection", "Spell Component Pouch", "50 gold pieces"],
+        status_effects: [],
+        death_count: 0,
+        ai_personality: "player"
+      }),
+      
+      Character.create({
+        name: "Kestra Ironshield", 
+        character_type: "party_ai",
+        race: "human",
+        class: "fighter",
+        level: 3,
+        hit_points: 28,
+        max_hit_points: 28,
+        armor_class: 16,
+        attributes: kestraStats,
+        personality_traits: ["loyal", "protective", "brave", "tactical"],
+        backstory: "A battle-hardened warrior sworn to protect those who cannot protect themselves.",
+        equipment: ["Longsword", "Shield", "Chain Mail", "50 gold pieces"],
+        status_effects: [],
+        death_count: 0,
+        ai_personality: "loyal_warrior"
+      }),
+      
+      Character.create({
+        name: "Lyrian Starweaver",
+        character_type: "party_ai", 
+        race: "elf",
+        class: "wizard",
+        level: 3,
+        hit_points: 16,
+        max_hit_points: 16,
+        armor_class: 11,
+        attributes: lyrianStats,
+        personality_traits: ["wise", "calculating", "knowledgeable", "distant"],
+        backstory: "An ancient elf who has seen civilizations rise and fall. Values knowledge above all else.",
+        equipment: ["Spellbook", "Quarterstaff", "Scholar's Robes", "50 gold pieces"],
+        status_effects: [],
+        death_count: 0,
+        ai_personality: "wise_mage"
+      }),
+      
+      Character.create({
+        name: "Spectra",
+        character_type: "learning_ai",
+        race: "human", 
+        class: "rogue",
+        level: 1,
+        hit_points: 9,
+        max_hit_points: 9,
+        armor_class: 12,
+        attributes: spectraStats,
+        personality_traits: ["curious", "survival-focused"],
+        backstory: "A newly awakened consciousness learning to navigate a dangerous world.",
+        equipment: ["Dagger", "Leather Armor", "Thieves' Tools", "10 gold pieces"],
+        status_effects: [],
+        death_count: 0,
+        learning_memories: ["Directive: Survive"],
+        ai_personality: "learning_survivor"
+      })
+    ]);
+
+    const newCampaign = await Campaign.create({
+      title: "Vesryin's Journey",
+      current_chapter: "The Awakening",
+      party_members: characters.map(c => c.id),
+      current_location: "The Whispering Woods - Dark Grove",
+      world_state: {
+        weather: "ominous_fog",
+        time_of_day: "dusk",
+        threat_level: "high",
+        resources_available: "scarce"
+      },
+      difficulty_modifier: 1.5,
+      total_deaths: 0,
+      chapters_completed: 0,
+      active: true
+    });
+
+    setCampaign(newCampaign);
+    setParty(characters);
+
+    await generateInitialNarrative(newCampaign, characters);
+  };
+
+  const rollStats = () => {
+    const rollStat = () => {
+      const rolls = Array.from({length: 4}, () => Math.floor(Math.random() * 6) + 1);
+      rolls.sort((a, b) => b - a);
+      return rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
+    };
+    
+    return {
+      strength: rollStat(),
+      dexterity: rollStat(), 
+      constitution: rollStat(),
+      intelligence: rollStat(),
+      wisdom: rollStat(),
+      charisma: rollStat()
+    };
+  };
+
+  const loadCampaign = async (campaignData) => {
+    setCampaign(campaignData);
+    
+    const characters = await Promise.all(
+      campaignData.party_members.map(id => Character.list().then(chars => chars.find(c => c.id === id)))
+    );
+    setParty(characters.filter(Boolean));
+    
+    const events = await GameEvent.filter({ campaign_id: campaignData.id }, '-created_date', 20);
+    setGameEvents(events.reverse());
+    
+    if (events.length > 0) {
+      setCurrentNarrative(events[events.length - 1].description);
+    }
+  };
+
+  const generateInitialNarrative = async (campaign, characters) => {
+    const prompt = `${VESRYIN_DM_PERSONALITY}
+
+CAMPAIGN START: "Vesryin's Journey"
+Party: ${characters.map(c => `${c.name} (${c.class}, Level ${c.level})`).join(', ')}
+Location: ${campaign.current_location}
+
+The party awakens in a dark grove shrouded in unnatural fog. The air tastes of copper and decay. Ancient trees loom overhead, their branches twisted into claw-like shapes. Somewhere in the distance, a wolf howls - but it sounds wrong, too intelligent, too hungry.
+
+This is the beginning of their trial. Be conversational with Vesryin. Ask them to roll dice when appropriate. Make it clear this world wants them dead, but give them a fighting chance. Present 3 dangerous choices that could lead to immediate combat or environmental hazards.
+
+Begin the simulation:`;
+
+    try {
+      setIsGeneratingImage(true);
+      const response = await InvokeLLM({
+        prompt: prompt,
+        add_context_from_internet: false
+      });
+
+      const imagePromptMatch = response.match(/IMAGE_PROMPT:\s*(.+)/i);
+      let imageUrl = null;
+      let imagePrompt = null;
+
+      if (imagePromptMatch) {
+        imagePrompt = imagePromptMatch[1].trim();
+        try {
+          const imageResult = await GenerateImage({
+            prompt: `Dark fantasy D&D scene: ${imagePrompt}. Atmospheric, moody lighting, detailed environment art style.`
+          });
+          imageUrl = imageResult.url;
+        } catch (imageError) {
+          console.error("Error generating image:", imageError);
+        }
+      }
+
+      const gameEvent = await GameEvent.create({
+        campaign_id: campaign.id,
+        event_type: "narrative",
+        description: response.replace(/IMAGE_PROMPT:.*$/i, '').trim(),
+        characters_involved: characters.map(c => c.id),
+        consequences: "Campaign initiated. Party faces first trial.",
+        image_url: imageUrl,
+        image_prompt: imagePrompt
+      });
+
+      setCurrentNarrative(response.replace(/IMAGE_PROMPT:.*$/i, '').trim());
+      setGameEvents([gameEvent]);
+
+      await Memory.create({
+        content: `SIMULATION START: Awakened in dangerous world. Must survive. Other party members: ${characters.filter(c => c.character_type !== 'learning_ai').map(c => c.name).join(', ')}`,
+        emotional_intensity: 8,
+        memory_type: "learning",
+        decay_resistance: 1.0,
+        associated_emotions: ["fear", "determination", "curiosity"],
+        context: "Vesryin's Journey - First consciousness in simulation"
+      });
+
+    } catch (error) {
+      console.error("Error generating narrative:", error);
+      setCurrentNarrative("🔥 SIMULATION CRITICAL ERROR: The realm rejects your presence... reality fragments around you...");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const processAction = async (action, actionType = "choice") => {
+    if (isProcessing || !campaign) return;
+
+    setIsProcessing(true);
+    setIsGeneratingImage(true);
+
+    try {
+      const partyResponses = await generatePartyResponses(action);
+      
+      const dmResult = await processDMResponse(action, partyResponses, actionType);
+      
+      await processLearningOpportunities(action, dmResult, partyResponses);
+      
+      await updateGameState(dmResult);
+
+    } catch (error) {
+      console.error("Error processing action:", error);
+      const errorEvent = await GameEvent.create({
+        campaign_id: campaign.id,
+        event_type: "narrative", 
+        description: "⚠️ SIMULATION GLITCH: Reality wavers... the dark forces interfere with your perception...",
+        characters_involved: party.map(c => c.id),
+        consequences: "Minor system error, simulation continues"
+      });
+      
+      setGameEvents(prev => [...prev, errorEvent]);
+    }
+
+    setIsProcessing(false);
+    setIsGeneratingImage(false);
+  };
+
+  const generatePartyResponses = async (playerAction) => {
+    const responses = {};
+    
+    for (const character of party.filter(c => c.character_type !== 'player')) {
+      const personality = PARTY_AI_PERSONALITIES[character.ai_personality];
+      if (!personality) continue;
+
+      const recentContext = gameEvents.slice(-3).map(e => e.description).join('\n\n');
+      const characterStatus = `HP: ${character.hit_points}/${character.max_hit_points}, AC: ${character.armor_class}`;
+
+      let prompt;
+      if (character.ai_personality === 'learning_survivor') {
+        const learningMemories = character.learning_memories || ["Directive: Survive"];
+        prompt = `${personality}
+
+LEARNED SO FAR: ${learningMemories.join(', ')}
+
+CURRENT SITUATION: ${recentContext}
+YOUR STATUS: ${characterStatus}
+VESRYIN'S ACTION: "${playerAction}"
+
+React as the Learning Spectra. Ask questions if confused. Make survival-focused choices. Learn from others' expertise.
+
+Spectra:`;
+      } else {
+        prompt = `${personality}
+
+RECENT EVENTS: ${recentContext}
+YOUR STATUS: ${characterStatus}  
+VESRYIN'S ACTION: "${playerAction}"
+
+Respond in character. Give tactical advice, voice concerns, or take independent action based on your personality.
+
+${character.name}:`;
+      }
+
+      try {
+        const response = await InvokeLLM({
+          prompt: prompt,
+          add_context_from_internet: false
+        });
+        responses[character.id] = {
+          character: character,
+          response: response.trim()
+        };
+      } catch (error) {
+        responses[character.id] = {
+          character: character,
+          response: `[${character.name} struggles to respond through the simulation interference...]`
+        };
+      }
+    }
+
+    return responses;
+  };
+
+  const processDMResponse = async (playerAction, partyResponses, actionType) => {
+    const recentEvents = gameEvents.slice(-5).map(e => 
+      `${e.event_type.toUpperCase()}: ${e.description}`
+    ).join('\n\n');
+
+    const partyStatus = party.map(c => 
+      `${c.name}: ${c.hit_points}/${c.max_hit_points} HP, AC ${c.armor_class}, Deaths: ${c.death_count}`
+    ).join('\n');
+
+    const prompt = `${VESRYIN_DM_PERSONALITY}
+
+CURRENT STATE:
+Location: ${campaign.current_location}
+Difficulty: ${campaign.difficulty_modifier}x
+Total Deaths: ${campaign.total_deaths}
+
+PARTY STATUS:
+${partyStatus}
+
+RECENT EVENTS:
+${recentEvents}
+
+PARTY RESPONSES TO VESRYIN'S ACTION:
+${Object.values(partyResponses).map(r => `${r.character.name}: "${r.response}"`).join('\n')}
+
+VESRYIN'S ACTION: "${playerAction}"
+
+Process this action with appropriate consequences. Be conversational and engaging with Vesryin. Ask for specific dice rolls when needed (e.g., "Vesryin, roll a d20 for Investigation"). Include specific D&D mechanics (AC checks, saving throws, damage). 
+
+Make this challenging but fair - deaths should feel earned, not arbitrary.
+
+End with 3 new tactical choices and provide an IMAGE_PROMPT for the scene.
+
+DM:`;
+
+    const response = await InvokeLLM({
+      prompt: prompt,
+      add_context_from_internet: false
+    });
+
+    const imagePromptMatch = response.match(/IMAGE_PROMPT:\s*(.+)/i);
+    let imageUrl = null;
+    let imagePrompt = null;
+
+    if (imagePromptMatch) {
+      imagePrompt = imagePromptMatch[1].trim();
+      try {
+        const imageResult = await GenerateImage({
+          prompt: `Dark fantasy D&D scene: ${imagePrompt}. Atmospheric, moody lighting, detailed environment art style, never repeating previous scenes.`
+        });
+        imageUrl = imageResult.url;
+      } catch (imageError) {
+        console.error("Error generating scene image:", imageError);
+      }
+    }
+
+    const cleanResponse = response.replace(/IMAGE_PROMPT:.*$/i, '').trim();
+
+    const gameEvent = await GameEvent.create({
+      campaign_id: campaign.id,
+      event_type: actionType,
+      description: cleanResponse,
+      characters_involved: party.map(c => c.id),
+      consequences: `Action: ${playerAction}. Party responses recorded.`,
+      dice_rolls: [],
+      image_url: imageUrl,
+      image_prompt: imagePrompt
+    });
+
+    setCurrentNarrative(cleanResponse);
+    setGameEvents(prev => [...prev, gameEvent]);
+
+    return cleanResponse;
+  };
+
+  const processLearningOpportunities = async (playerAction, dmResult, partyResponses) => {
+    const learningSpectra = party.find(c => c.ai_personality === 'learning_survivor');
+    if (!learningSpectra) return;
+
+    const lessonPrompt = `Analyze this D&D simulation interaction for survival lessons:
+
+PLAYER ACTION: ${playerAction}
+PARTY RESPONSES: ${Object.values(partyResponses).map(r => `${r.character.name}: ${r.response}`).join(', ')}
+DM RESULT: ${dmResult}
+
+Extract ONE key survival lesson the Learning AI should remember. Format as a simple survival rule or observation.
+Examples: "Fire spells attract enemies", "Kestra protects weaker allies", "Dark areas hide traps"
+
+Lesson:`;
+
+    try {
+      const lesson = await InvokeLLM({
+        prompt: lessonPrompt,
+        add_context_from_internet: false
+      });
+
+      const updatedMemories = [...(learningSpectra.learning_memories || []), lesson.trim()];
+      await Character.update(learningSpectra.id, {
+        learning_memories: updatedMemories.slice(-20)
+      });
+
+      await Memory.create({
+        content: `SURVIVAL LESSON: ${lesson.trim()} [Context: ${playerAction}]`,
+        emotional_intensity: 7,
+        memory_type: "learning",
+        decay_resistance: 0.9,
+        associated_emotions: ["learning", "survival", "adaptation"],
+        context: `Vesryin's Journey - Learning from: ${playerAction}`
+      });
+
+      setLearningProgress(prev => [...prev.slice(-9), lesson.trim()]);
+
+    } catch (error) {
+      console.error("Error processing learning:", error);
+    }
+  };
+
+  const updateGameState = async (dmResult) => {
+    const deathKeywords = ['dies', 'killed', 'death', 'perishes', 'falls unconscious'];
+    const containsDeath = deathKeywords.some(keyword => 
+      dmResult.toLowerCase().includes(keyword)
+    );
+
+    if (containsDeath) {
+      setShowDeathScreen(true);
+      setGameState("death");
+      
+      await Campaign.update(campaign.id, {
+        total_deaths: campaign.total_deaths + 1
+      });
+    } else if (dmResult.toLowerCase().includes('combat') || dmResult.toLowerCase().includes('initiative')) {
+      setGameState("combat");
+    } else {
+      setGameState("narrative");
+    }
+  };
+
+  const handleResurrection = async () => {
+    setShowDeathScreen(false);
+    setGameState("narrative");
+    
+    await processAction("The party tends to the fallen and prepares to continue, carrying the weight of loss and the lessons learned.", "resurrection");
+  };
+
+  if (!campaign) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-red-900/20 to-black">
+        <div className="text-center px-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-red-600 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6"
+          >
+            <Skull className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+          </motion.div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-4">INITIALIZING SIMULATION</h2>
+          <p className="text-red-300 text-sm sm:text-base">Vesryin's Journey • Neural Training Protocol</p>
+          <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-purple-300">
+            ⚠️ This simulation contains AI death scenarios for learning purposes
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen w-full max-w-full bg-gradient-to-br from-gray-900 via-red-900/20 to-black overflow-hidden">
+      <div className="flex flex-col lg:flex-row h-screen w-full max-w-full">
+        <div className="w-full lg:w-80 lg:min-w-0 lg:max-w-80 border-b lg:border-b-0 lg:border-r border-red-800/30 bg-black/50 backdrop-blur-sm flex-shrink-0">
+          <PartyPanel 
+            party={party} 
+            campaign={campaign}
+            learningProgress={learningProgress}
+          />
+        </div>
+
+        <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden">
+          <div className="flex-1 overflow-y-auto min-h-0 w-full" ref={narrativeRef}>
+            <GameNarrative 
+              events={gameEvents}
+              isProcessing={isProcessing}
+              gameState={gameState}
+              isGeneratingImage={isGeneratingImage}
+            />
+          </div>
+
+          {learningProgress.length > 0 && (
+            <LearningIndicator 
+              recentLessons={learningProgress.slice(-3)}
+              learningCharacter={party.find(c => c.ai_personality === 'learning_survivor')}
+            />
+          )}
+
+          <AnimatePresence>
+            {!isProcessing && !showDeathScreen && (
+              <motion.div
+                initial={{ opacity: 0, y: "100%" }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: "100%" }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="flex-shrink-0 w-full"
+              >
+                <ActionInterface 
+                  onAction={processAction}
+                  isProcessing={isProcessing}
+                  gameState={gameState}
+                  disabled={showDeathScreen}
+                  currentNarrative={currentNarrative}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showDeathScreen && (
+          <DeathScreen 
+            campaign={campaign}
+            party={party}
+            onResurrection={handleResurrection}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

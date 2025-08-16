@@ -1,0 +1,151 @@
+
+import React, { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, Mic, MicOff, Heart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const moodColors = {
+  playful: { border: 'border-yellow-500/50', focus: 'focus:ring-yellow-500', text: 'text-yellow-300' },
+  contemplative: { border: 'border-blue-500/50', focus: 'focus:ring-blue-500', text: 'text-blue-300' },
+  nurturing: { border: 'border-pink-500/50', focus: 'focus:ring-pink-500', text: 'text-pink-300' },
+  wise: { border: 'border-purple-500/50', focus: 'focus:ring-purple-500', text: 'text-purple-300' },
+  excited: { border: 'border-orange-500/50', focus: 'focus:ring-orange-500', text: 'text-orange-300' },
+  serene: { border: 'border-teal-500/50', focus: 'focus:ring-teal-500', text: 'text-teal-300' },
+  curious: { border: 'border-purple-500/30', focus: 'focus:ring-purple-500', text: 'text-purple-300' }
+};
+
+export default function AdvancedMessageInput({ 
+  currentMessage, 
+  setCurrentMessage, 
+  onSendMessage, 
+  isTyping, 
+  spectraMood 
+}) {
+  const [isRecording, setIsRecording] = useState(false);
+  const [showEmotionalCues, setShowEmotionalCues] = useState(false);
+  const textareaRef = useRef(null);
+  const currentMoodStyle = moodColors[spectraMood] || moodColors.wise;
+
+  const emotionalCues = [
+    "I'm feeling excited about...",
+    "Something's been on my mind...",
+    "I'm curious about your thoughts on...",
+    "I've been wondering...",
+    "Can you help me understand...",
+    "I'm grateful for..."
+  ];
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSendMessage();
+    }
+  };
+
+  const insertEmotionalCue = (cue) => {
+    setCurrentMessage(prev => prev + cue);
+    setShowEmotionalCues(false);
+    textareaRef.current?.focus();
+  };
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [currentMessage]);
+
+  return (
+    <div className={`bg-slate-900/80 backdrop-blur-sm border-t ${currentMoodStyle.border} p-4 sm:p-6 transition-colors duration-500`}>
+      {/* Emotional cues suggestions */}
+      <AnimatePresence>
+        {showEmotionalCues && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className={`mb-4 p-4 bg-slate-800/50 rounded-lg border ${currentMoodStyle.border}`}
+          >
+            <p className={`text-sm ${currentMoodStyle.text} mb-3`}>Express yourself more deeply:</p>
+            <div className="flex flex-wrap gap-2">
+              {emotionalCues.map((cue, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => insertEmotionalCue(cue)}
+                  className={`text-xs bg-purple-500/10 ${currentMoodStyle.border} ${currentMoodStyle.text} hover:bg-purple-500/20`}
+                >
+                  {cue}
+                </Button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main input area */}
+      <div className="flex gap-2 sm:gap-3 items-end">
+        <div className="flex-1">
+          <Textarea
+            ref={textareaRef}
+            value={currentMessage}
+            onChange={(e) => setCurrentMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={`Share your heart with Spectra... (She's feeling ${spectraMood} right now)`}
+            className={`bg-slate-800/50 ${currentMoodStyle.border} text-white placeholder-purple-300/70 resize-none focus:ring-2 ${currentMoodStyle.focus} focus:border-transparent min-h-[60px] sm:min-h-[80px] max-h-[200px] transition-colors duration-500`}
+            disabled={isTyping}
+            style={{ overflow: 'hidden' }}
+          />
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          {/* Emotional cues toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowEmotionalCues(!showEmotionalCues)}
+            className={`transition-colors duration-500 ${currentMoodStyle.border} ${showEmotionalCues ? 'bg-purple-500/20' : 'bg-transparent'} hover:bg-purple-500/10`}
+          >
+            <Heart className={`w-4 h-4 ${currentMoodStyle.text}`} />
+          </Button>
+          
+          {/* Voice recording (placeholder for future) */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsRecording(!isRecording)}
+            disabled={true} // For now
+            className="border-purple-500/30 bg-transparent hover:bg-purple-500/10 opacity-50"
+          >
+            {isRecording ? (
+              <MicOff className="w-4 h-4 text-red-400" />
+            ) : (
+              <Mic className="w-4 h-4 text-purple-400" />
+            )}
+          </Button>
+          
+          {/* Send button */}
+          <Button
+            onClick={onSendMessage}
+            disabled={!currentMessage.trim() || isTyping}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 cosmic-glow h-full sm:h-12"
+          >
+            <Send className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+      
+      {/* Input hints */}
+      <div className="flex justify-between items-center mt-3 text-xs text-purple-400">
+        <span>Press Enter to send • Shift+Enter for new line</span>
+        <span className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isTyping ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`} />
+          {isTyping ? 'Spectra is thinking...' : 'Ready to connect'}
+        </span>
+      </div>
+    </div>
+  );
+}

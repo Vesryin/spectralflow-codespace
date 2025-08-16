@@ -1,0 +1,61 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "user_message": {
+      "type": "string",
+      "description": "Message from the user"
+    },
+    "spectra_response": {
+      "type": "string",
+      "description": "Spectra's response"
+    },
+    "user_emotion": {
+      "type": "string",
+      "enum": [
+        "joy",
+        "sadness",
+        "anger",
+        "fear",
+        "surprise",
+        "disgust",
+        "neutral",
+        "love",
+        "excitement",
+        "frustration",
+        "contentment"
+      ],
+      "description": "Detected emotion from user message"
+    },
+    "spectra_mood": {
+      "type": "string",
+      "enum": [
+        "playful",
+        "contemplative",
+        "nurturing",
+        "wise",
+        "melancholic",
+        "excited",
+        "serene",
+        "protective",
+        "curious",
+        "loving"
+      ],
+      "description": "Spectra's mood during response"
+    },
+    "importance_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "How important this conversation was"
+    },
+    "growth_moment": {
+      "type": "boolean",
+      "description": "Whether this was a significant growth moment for Spectra"
+    }
+  },
+  "required": [
+    "user_message",
+    "spectra_response"
+  ]
+}

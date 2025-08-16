@@ -1,0 +1,117 @@
+"use client";
+
+import React, { createContext, useState, useContext } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+const SidebarContext = createContext(null);
+
+export const useSidebar = () => {
+  const context = useContext(SidebarContext);
+  if (!context) {
+    throw new Error("useSidebar must be used within a SidebarProvider");
+  }
+  return context;
+};
+
+export const SidebarProvider = ({ children, initialOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(initialOpen);
+  const toggle = () => setIsOpen(!isOpen);
+
+  return (
+    <SidebarContext.Provider value={{ isOpen, setIsOpen, toggle }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+};
+
+export const Sidebar = React.forwardRef(
+  ({ className, children, ...props }, ref) => {
+    const { isOpen } = useSidebar();
+    return (
+      <motion.aside
+        ref={ref}
+        className={cn(
+          "relative flex flex-col transition-all duration-300 ease-in-out z-40",
+          className
+        )}
+        initial={false}
+        animate={{ width: isOpen ? "288px" : "0px" }}
+        {...props}
+      >
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex-1 flex flex-col overflow-hidden min-w-[288px]"
+            >
+              {children}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.aside>
+    );
+  }
+);
+Sidebar.displayName = "Sidebar";
+
+export const SidebarHeader = React.forwardRef(
+// ... keep existing code
+);
+SidebarHeader.displayName = "SidebarHeader";
+
+export const SidebarContent = React.forwardRef(
+// ... keep existing code
+);
+SidebarContent.displayName = "SidebarContent";
+
+export const SidebarFooter = React.forwardRef(
+// ... keep existing code
+);
+SidebarFooter.displayName = "SidebarFooter";
+
+export const SidebarGroup = React.forwardRef(
+// ... keep existing code
+);
+SidebarGroup.displayName = "SidebarGroup";
+
+export const SidebarGroupLabel = React.forwardRef(
+// ... keep existing code
+);
+SidebarGroupLabel.displayName = "SidebarGroupLabel";
+
+export const SidebarGroupContent = React.forwardRef(
+// ... keep existing code
+);
+SidebarGroupContent.displayName = "SidebarGroupContent";
+
+export const SidebarMenu = React.forwardRef(
+// ... keep existing code
+);
+SidebarMenu.displayName = "SidebarMenu";
+
+export const SidebarMenuItem = React.forwardRef(
+// ... keep existing code
+);
+SidebarMenuItem.displayName = "SidebarMenuItem";
+
+export const SidebarMenuButton = React.forwardRef(
+// ... keep existing code
+);
+SidebarMenuButton.displayName = "SidebarMenuButton";
+
+export const SidebarTrigger = ({ className, children, ...props }) => {
+  const { toggle } = useSidebar();
+  return (
+    <button
+      onClick={toggle}
+      className={cn("focus:outline-none", className)}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};

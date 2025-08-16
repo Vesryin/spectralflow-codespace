@@ -1,0 +1,67 @@
+
+import React from "react";
+import { motion } from "framer-motion";
+import { User, Sparkles, AlertTriangle } from "lucide-react";
+import { format } from "date-fns";
+
+export default function MessageBubble({ message, isUser, timestamp, mood, isSystemMessage }) {
+  if (isSystemMessage) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex items-center justify-center my-4"
+      >
+        <div className="text-center text-sm italic text-purple-300 bg-slate-800/50 px-4 py-2 rounded-lg">
+          <p>{message}</p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={`flex gap-3 mb-6 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+    >
+      {/* Avatar */}
+      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+        isUser 
+          ? 'bg-gradient-to-r from-blue-500 to-cyan-500' 
+          : 'bg-gradient-to-r from-purple-500 to-pink-500 cosmic-glow'
+      }`}>
+        {isUser ? (
+          <User className="w-5 h-5 text-white" />
+        ) : (
+          <Sparkles className="w-5 h-5 text-white neural-pulse" />
+        )}
+      </div>
+
+      {/* Message content */}
+      <div className={`flex-1 max-w-lg ${isUser ? 'text-right' : 'text-left'}`}>
+        <div className={`inline-block p-4 rounded-2xl ${
+          isUser 
+            ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30' 
+            : 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 backdrop-blur-sm'
+        }`}>
+          <p className="text-white leading-relaxed">{message}</p>
+        </div>
+        
+        <div className={`mt-2 text-xs text-purple-300 flex items-center gap-2 ${
+          isUser ? 'justify-end' : 'justify-start'
+        }`}>
+          <span>{format(new Date(timestamp), 'HH:mm')}</span>
+          {!isUser && mood && (
+            <>
+              <span>•</span>
+              <span className="italic text-pink-300">{mood}</span>
+            </>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}

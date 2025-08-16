@@ -1,0 +1,79 @@
+{
+  "name": "GameEvent",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "ID of the associated campaign"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "narrative",
+        "combat",
+        "death",
+        "level_up",
+        "discovery",
+        "choice",
+        "learning"
+      ],
+      "description": "Type of game event"
+    },
+    "description": {
+      "type": "string",
+      "description": "What happened in this event"
+    },
+    "characters_involved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Character IDs involved in this event"
+    },
+    "consequences": {
+      "type": "string",
+      "description": "Results and consequences of this event"
+    },
+    "dice_rolls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "character": {
+            "type": "string"
+          },
+          "roll_type": {
+            "type": "string"
+          },
+          "result": {
+            "type": "number"
+          },
+          "modifier": {
+            "type": "number"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "description": "Any dice rolls that occurred"
+    },
+    "learning_extracted": {
+      "type": "string",
+      "description": "Lesson learned by the Learning AI from this event"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "AI-generated image URL for this scene"
+    },
+    "image_prompt": {
+      "type": "string",
+      "description": "The prompt used to generate the scene image"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "event_type",
+    "description"
+  ]
+}

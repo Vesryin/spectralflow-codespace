@@ -1,0 +1,41 @@
+import React from "react";
+import { Heart, Zap, Cloud, Sun, Moon, Flame } from "lucide-react";
+import { motion } from "framer-motion";
+
+const moodIcons = {
+  playful: { icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
+  contemplative: { icon: Cloud, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+  nurturing: { icon: Heart, color: 'text-pink-400', bg: 'bg-pink-500/20' },
+  wise: { icon: Moon, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+  excited: { icon: Sun, color: 'text-orange-400', bg: 'bg-orange-500/20' },
+  serene: { icon: Cloud, color: 'text-teal-400', bg: 'bg-teal-500/20' },
+};
+
+export default function EmotionalIndicator({ mood, intensity = 0.5 }) {
+  const moodData = moodIcons[mood] || moodIcons.contemplative;
+  const IconComponent = moodData.icon;
+
+  return (
+    <motion.div
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className={`inline-flex items-center gap-2 px-3 py-2 rounded-full ${moodData.bg} border border-purple-500/30`}
+    >
+      <IconComponent className={`w-4 h-4 ${moodData.color} neural-pulse`} />
+      <span className="text-sm text-white/90 font-medium capitalize">{mood}</span>
+      <div className="flex gap-1">
+        {[1, 2, 3].map((level) => (
+          <div
+            key={level}
+            className={`w-1 h-4 rounded-full transition-all duration-300 ${
+              level <= intensity * 3 
+                ? `${moodData.color.replace('text-', 'bg-')}` 
+                : 'bg-white/20'
+            }`}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
