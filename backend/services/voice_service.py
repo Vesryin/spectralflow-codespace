@@ -53,7 +53,7 @@ class VoiceService:
             
         try:
             # Synthesize speech and get it as a list of integers (wav data)
-            wav_data = self.tts_model.tts(text=text, speaker=self.tts_model.speakers[0], language=self.tts_model.languages[0])
+            wav_data = self.tts_model.tts(text=text)
             
             # Convert to a NumPy array
             wav_np = np.array(wav_data, dtype=np.float32)
