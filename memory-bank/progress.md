@@ -13,8 +13,8 @@ Completed:
   - Implemented the foundational WebGL scene for "The Living Network."
   - Added data loading for the network graph and narrative.
   - Implemented the "Node Pulse" animation.
-  - Implemented advanced shaders for nodes and filaments.
-  - Added user interaction for displaying narrative content.
+  - Implemented advanced shaders (GLSL) for nodes and filaments, creating dynamic, time-based animations.
+  - Added user interaction (Three.js Raycaster) for displaying narrative content on hover and click.
 
 Remaining: 
 - Rung 3: Personality & UX
